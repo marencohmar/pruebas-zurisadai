@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Práctica de fábulas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+/* Idea: una pizarra de aula escrita con marcador azul; las partes son secciones de un cuaderno, no tarjetas. */
+:root{
+  color-scheme:light;
+  --paper:#f5f7f2;
+  --board:#ffffff;
+  --marker:#1d3fa6;
+  --ink:#1f2a37;
+  --muted:#5b6675;
+  --line:#d6dce3;
+  --mango:#f4a81d;
+  --mango-soft:#fff1d2;
+  --ok:#17794a;
+  --ok-soft:#dff3e7;
+  --bad:#b92c2c;
+  --bad-soft:#fbe3e1;
+  --display:"Patrick Hand","Comic Sans MS",cursive;
+  --body:"Andika","Trebuchet MS",Verdana,sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 18px/1.5 var(--body);padding-bottom:96px}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--mango);outline-offset:2px}
+.wrap{max-width:720px;margin:0 auto;padding:16px}
+h1,h2{font-family:var(--display);font-weight:400;color:var(--marker);text-wrap:balance;margin:0;line-height:1.1}
+
+.board{background:var(--board);border:8px solid #b9c0c9;border-bottom-width:14px;border-radius:6px;padding:16px 18px;display:grid;gap:8px}
+.board .subject{font-family:var(--display);font-size:22px;color:var(--marker)}
+.board h1{font-size:46px}
+.board p{margin:0;color:var(--muted)}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+
+.btn{border:2px solid var(--marker);background:var(--board);color:var(--marker);padding:9px 16px;border-radius:8px;font-weight:700;min-height:46px}
+.btn{text-decoration:none;display:inline-flex;align-items:center}
+.btn.primary{background:var(--marker);color:#fff}
+.btn:disabled{opacity:.5;cursor:default}
+
+details.notes{margin-top:14px;border-left:6px solid var(--mango);background:var(--mango-soft);padding:10px 14px;border-radius:0 8px 8px 0}
+details.notes summary{font-weight:700;cursor:pointer}
+details.notes h3{font-size:18px;margin:14px 0 4px}
+details.notes p,details.notes ol,details.notes ul{margin:4px 0}
+details.notes ol,details.notes ul{padding-left:24px}
+
+#result{margin-top:18px}
+.result{background:var(--board);border:3px solid var(--marker);border-radius:8px;padding:16px 18px;display:grid;gap:12px}
+.score{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.score b{font-family:var(--display);font-size:64px;line-height:1;color:var(--marker);font-weight:400;font-variant-numeric:tabular-nums}
+.score span{font-size:20px}
+.result h2{font-size:32px}
+.result p{margin:0}
+.breakdown{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.breakdown li{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-size:16px}
+.meter{grid-column:1/-1;height:9px;border-radius:5px;background:var(--line);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--ok)}
+.meter i.low{background:var(--mango)}
+
+section.part{margin-top:30px;border-top:4px solid var(--marker);padding-top:12px}
+.part-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.part h2{font-size:30px}
+.part-pts{color:var(--muted);font-size:15px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.hint{margin:4px 0 10px;color:var(--muted)}
+
+.item{padding:14px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}
+.q{margin:0 0 10px;font-weight:700}
+.q-plain{font-weight:400}
+.choices{display:grid;gap:8px}
+.choices.two{grid-template-columns:1fr 1fr}
+.choices.four{grid-template-columns:1fr 1fr}
+.choice{text-align:left;background:var(--board);border:2px solid var(--line);border-radius:8px;padding:10px 12px;min-height:48px}
+.choices.two .choice,.choices.four .choice{text-align:center}
+.choice[aria-pressed="true"]{border-color:var(--marker);background:#e6ecfb;font-weight:700}
+.choice.right{border-color:var(--ok);background:var(--ok-soft)}
+.choice.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.choice:disabled{cursor:default;color:var(--ink)}
+
+.fb{margin:10px 0 0;padding:8px 12px;border-radius:6px;font-size:16px}
+.fb.ok{background:var(--ok-soft);color:#0f5635}
+.fb.no{background:var(--bad-soft);color:#7f1d1d}
+
+.tale{font-family:var(--display);font-size:26px;color:var(--marker);margin:4px 0 0}
+
+.match{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.match-col{display:grid;gap:8px;align-content:start}
+.tile{position:relative;text-align:left;background:var(--board);border:2px solid var(--line);border-radius:8px;padding:10px 12px;min-height:58px;font-size:16px;overflow-wrap:anywhere}
+.tile.sel{border-color:var(--mango);background:var(--mango-soft)}
+.tile.paired{padding-left:38px}
+.badge{position:absolute;left:8px;top:9px;width:23px;height:23px;border-radius:50%;color:#fff;font-weight:700;font-size:14px;display:grid;place-items:center}
+.tile.right{border-color:var(--ok);background:var(--ok-soft)}
+.tile.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.tile:disabled{cursor:default;color:var(--ink)}
+
+.blank{display:grid;gap:6px}
+.blank label{font-weight:400}
+input[type=text],textarea{width:100%;background:var(--board);border:2px solid var(--line);border-radius:8px;padding:10px 12px;min-height:48px}
+input[type=text]:focus,textarea:focus{border-color:var(--marker);outline:none}
+textarea{min-height:92px;resize:vertical;line-height:1.4}
+input.right{border-color:var(--ok);background:var(--ok-soft)}
+input.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.field{display:grid;gap:4px;margin-top:10px}
+.field label{font-weight:700}
+.field small{color:var(--muted);font-size:15px}
+
+.model{margin-top:10px;background:var(--mango-soft);border-left:6px solid var(--mango);padding:10px 12px;border-radius:0 6px 6px 0}
+.model h3{margin:0 0 4px;font-size:16px}
+.model p,.model ul,.model ol{margin:4px 0}
+.model ul,.model ol{padding-left:22px}
+.marks{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center}
+.marks .lab{font-weight:700;font-size:16px;width:100%}
+.mark{border:2px solid var(--line);background:var(--board);border-radius:8px;padding:8px 16px;min-height:46px;font-weight:700}
+.mark.on-ok{border-color:var(--ok);background:var(--ok-soft);color:#0f5635}
+.mark.on-no{border-color:var(--mango);background:var(--mango-soft)}
+
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--board);border-top:3px solid var(--marker);z-index:5}
+.bar .in{max-width:720px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.bar .msg{font-size:15px;line-height:1.25}
+.bar .msg b{font-size:18px;font-variant-numeric:tabular-nums}
+
+@media (max-width:400px){
+  .board h1{font-size:40px}
+  body{font-size:17px}
+  .tile{font-size:15px;padding:9px 9px}
+  .tile.paired{padding-left:34px}
+  .badge{left:6px}
+}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="board">
+    <div class="subject">Lengua y Literatura · Noviembre 2026</div>
+    <h1>Práctica de fábulas</h1>
+    <p>Cada prueba nueva cambia las preguntas y su orden.</p>
+    <div class="tools"><a class="btn" href="../index.html">← Menú</a><button id="newBtn" class="btn" type="button">Nueva prueba</button></div>
+  </header>
+
+  <details class="notes" id="notes">
+    <summary>Abrir mis apuntes para estudiar</summary>
+    <h3>¿Qué es la fábula?</h3>
+    <p>Es una narración breve, escrita en prosa o en verso. Generalmente, los personajes son animales que hablan y actúan como seres humanos. También pueden ser objetos con características humanas. Siempre deja una moraleja.</p>
+    <h3>Características</h3>
+    <ol>
+      <li>Es breve: cuenta una historia corta.</li>
+      <li>Sus personajes, generalmente animales, actúan como personas.</li>
+      <li>Tiene moraleja: deja una enseñanza o un consejo al lector.</li>
+      <li>Tiene inicio, desarrollo y final.</li>
+    </ol>
+    <h3>Elementos</h3>
+    <ul>
+      <li><b>Inicio</b> o introducción: presenta a los personajes y la situación.</li>
+      <li><b>Nudo</b> o desarrollo: aparece el problema y los personajes actúan para resolverlo.</li>
+      <li><b>Desenlace</b> o final: se resuelve el problema.</li>
+      <li><b>Moraleja:</b> la enseñanza final.</li>
+      <li><b>Narrador:</b> quien cuenta la historia.</li>
+      <li><b>Personajes:</b> quienes participan en la historia.</li>
+    </ul>
+  </details>
+
+  <div id="result" aria-live="polite"></div>
+  <main id="quiz"></main>
+</div>
+
+<div class="bar">
+  <div class="in">
+    <div class="msg" id="barMsg"></div>
+    <button id="checkBtn" class="btn primary" type="button">Revisar mi prueba</button>
+  </div>
+</div>
+
+<script>
+const BANK = {
+  vf: [
+    {q:"La fábula es un relato breve.", a:true},
+    {q:"Una fábula puede estar escrita en prosa o en verso.", a:true},
+    {q:"Generalmente, los personajes de una fábula son animales que hablan y actúan como personas.", a:true},
+    {q:"En una fábula, los personajes también pueden ser objetos con características humanas.", a:true},
+    {q:"La moraleja es una enseñanza o un consejo para el lector.", a:true},
+    {q:"En el nudo o desarrollo aparece el problema de la historia.", a:true},
+    {q:"El narrador es quien cuenta la historia.", a:true},
+    {q:"Las fábulas tienen una estructura sencilla porque buscan transmitir valores.", a:true},
+    {q:"Las fábulas solo se pueden escribir en verso.", a:false, why:"Pueden estar en prosa o en verso."},
+    {q:"La fábula no deja ninguna enseñanza.", a:false, why:"Toda fábula deja una moraleja."},
+    {q:"En el inicio se resuelve el problema de la historia.", a:false, why:"El problema se resuelve en el desenlace."},
+    {q:"El desenlace es la parte donde se presentan los personajes.", a:false, why:"Los personajes se presentan en el inicio."},
+    {q:"Las fábulas son historias muy largas.", a:false, why:"Las fábulas son historias breves."},
+    {q:"En las fábulas, los animales nunca hablan.", a:false, why:"Los animales hablan y actúan como seres humanos."}
+  ],
+  om: [
+    {q:"¿Qué es una fábula?", ok:"Un relato breve cuyos personajes actúan como personas y que deja una moraleja", no:["Una lista de animales y lo que comen","Una noticia sobre lo que pasó ayer","Una receta con pasos para seguir"]},
+    {q:"¿Quiénes son, generalmente, los personajes de una fábula?", ok:"Animales que hablan y actúan como personas", no:["Solo reyes y princesas","Personas famosas de la vida real","Los lectores del cuento"]},
+    {q:"¿Qué es la moraleja?", ok:"La enseñanza o el consejo que deja la fábula", no:["El nombre del autor","El lugar donde pasa la historia","El primer personaje que aparece"]},
+    {q:"¿Para qué se escribe una fábula?", ok:"Para transmitir un valor o una enseñanza", no:["Para anunciar un producto","Para informar cómo estará el clima","Para explicar una operación de matemática"]},
+    {q:"¿En qué parte se presentan los personajes y la situación inicial?", ok:"En el inicio", no:["En el nudo","En el desenlace","En la moraleja"]},
+    {q:"¿En qué parte aparece el problema de la historia?", ok:"En el nudo", no:["En el inicio","En el desenlace","En el título"]},
+    {q:"¿En qué parte se resuelve el problema?", ok:"En el desenlace", no:["En el inicio","En el nudo","En el narrador"]},
+    {q:"¿Cuál es otro nombre del nudo?", ok:"Desarrollo", no:["Moraleja","Introducción","Narrador"]},
+    {q:"¿Quién cuenta la historia en una fábula?", ok:"El narrador", no:["La moraleja","El desenlace","El título"]},
+    {q:"¿Cuál de estas frases es una moraleja?", ok:"Decir la verdad nos ayuda a ganar la confianza de los demás.", no:["El conejo vivía cerca del río.","Había una vez un gato gris.","La tortuga tenía cuatro patas."]},
+    {q:"¿Cuál NO es una característica de la fábula?", ok:"Es una historia muy larga y sin enseñanza", no:["Es breve","Tiene moraleja","Sus personajes actúan como personas"]},
+    {q:"¿Cómo puede estar escrita una fábula?", ok:"En prosa o en verso", no:["Solo con dibujos","Solo con números","Solo en forma de lista"]}
+  ],
+  unir: [
+    {l:"Fábula", r:"Relato breve que deja una enseñanza"},
+    {l:"Moraleja", r:"Enseñanza o consejo para el lector"},
+    {l:"Narrador", r:"Quien cuenta la historia"},
+    {l:"Personajes", r:"Quienes participan en la historia"},
+    {l:"Inicio", r:"Presenta la situación y a los personajes"},
+    {l:"Nudo", r:"Aparece el problema"},
+    {l:"Desenlace", r:"Se resuelve el problema"}
+  ],
+  moral: [
+    {l:"Dos amigos cargan juntos una caja que ninguno podía levantar solo.", r:"Unidos, todo es más fácil."},
+    {l:"Una niña deja la tarea para el último momento y no la termina.", r:"No dejes para después lo que puedes hacer hoy."},
+    {l:"Un niño le grita a su hermana y luego le pide perdón.", r:"Reconocer un error nos hace mejores."},
+    {l:"Una niña siempre saluda y da las gracias en la pulpería.", r:"La amabilidad gana amigos."},
+    {l:"Un niño presume que corre rápido, no entrena y pierde la carrera.", r:"Quien presume y no se esfuerza, pierde."},
+    {l:"Una niña se cae muchas veces de la bicicleta, pero sigue hasta aprender.", r:"Quien persevera, lo logra."}
+  ],
+  completa: [
+    {before:"La enseñanza que deja una fábula se llama", after:".", a:["moraleja"]},
+    {before:"Las partes de la historia son inicio, nudo y", after:".", a:["desenlace","final"]},
+    {before:"La fábula puede estar escrita en prosa o en", after:".", a:["verso"]},
+    {before:"La persona que cuenta la historia es el", after:".", a:["narrador"]},
+    {before:"Generalmente, los personajes de las fábulas son", after:".", a:["animales"]},
+    {before:"Los animales de la fábula hablan y actúan como seres", after:".", a:["humanos"]},
+    {before:"El nudo también se llama", after:".", a:["desarrollo"]},
+    {before:"El inicio también se llama", after:".", a:["introducción"]},
+    {before:"La fábula es un relato", after:", es decir, corto.", a:["breve"]}
+  ],
+  fabulas: [
+    {t:"El zanate presumido", inicio:"En un palo de mango vivía un zanate que presumía sus plumas brillantes ante los demás pájaros.", nudo:"Un día de tormenta se quedó admirándose en un charco, no buscó refugio y se mojó tanto que no pudo volar.", desenlace:"Una paloma lo llevó a su nido y lo cuidó hasta que se secó. El zanate le dio las gracias y dejó de presumir.", moraleja:"No presumas de lo que tienes: todos necesitamos ayuda alguna vez."},
+    {t:"La iguana dormilona", inicio:"Junto a un río vivían una iguana y una hormiga que prometieron limpiar juntas su camino.", nudo:"La iguana se dormía al sol y la hormiga cargaba sola las hojas. Cuando llovió, el camino se tapó y el agua llegó a sus casas.", desenlace:"La iguana pidió perdón, ayudó a limpiar y desde entonces trabajó al lado de su amiga.", moraleja:"Las promesas se cumplen y el trabajo se comparte."},
+    {t:"Los dos gallitos", inicio:"En un patio vivían dos gallitos que un día encontraron un grano grande de maíz.", nudo:"Pelearon tanto por el grano que no vieron llegar a una gallina, y ella se lo llevó.", desenlace:"Cansados y sin comida, los gallitos hicieron las paces y acordaron repartir lo que encontraran.", moraleja:"Quien pelea por todo puede quedarse sin nada."},
+    {t:"La lora habladora", inicio:"En la orilla de una laguna vivía una lora muy habladora, amiga de un sapo tímido.", nudo:"El sapo le contó un secreto, pero la lora se lo dijo a todos y el sapo dejó de hablarle.", desenlace:"La lora le pidió perdón al sapo y aprendió a guardar lo que le confiaban. Los dos volvieron a ser amigos.", moraleja:"Los secretos de un amigo se cuidan."}
+  ],
+  ensenanzaFijas: [
+    {s:"Un niño comparte sus alimentos con un compañero que no tiene.", m:"Debemos compartir con quienes lo necesitan."},
+    {s:"Una persona miente constantemente y después nadie cree en sus palabras.", m:"Si mentimos, después nadie nos creerá. Siempre debemos decir la verdad."}
+  ],
+  ensenanzaExtra: [
+    {s:"Una niña encuentra un monedero en el recreo y lo entrega a la maestra.", m:"Debemos ser honestos y devolver lo que no es nuestro."},
+    {s:"Un niño se burla de cómo lee su compañero y otro día a él le cuesta leer frente a la clase.", m:"No debemos burlarnos de los demás, porque todos tenemos dificultades."},
+    {s:"Un niño ayuda a levantarse a un compañero que se cayó y otro día ese compañero lo ayuda a él.", m:"Si ayudamos a los demás, ellos también nos ayudarán."}
+  ]
+};
+
+const PAIR_COLORS = ["#1d3fa6","#a0460e","#6b2fa0","#00707a","#a3235c","#4c6a12","#555f6e"];
+const $ = s => document.querySelector(s);
+const shuffle = list => { const a=[...list]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; };
+const sample = (list,n) => shuffle(list).slice(0,n);
+const stripAccents = s => s.normalize("NFD").replace(/[̀-ͯ]/g,"");
+const clean = s => s.trim().toLowerCase().replace(/[.,;:!?]+$/,"").replace(/\s+/g," ");
+function checkBlank(value, accepted){
+  const v = clean(value);
+  for(const a of accepted){ if(v===clean(a)) return {ok:true,tip:null}; }
+  for(const a of accepted){ if(v && stripAccents(v)===stripAccents(clean(a))) return {ok:true,tip:a}; }
+  return {ok:false,tip:null};
+}
+function el(tag, props={}, ...kids){
+  const n=document.createElement(tag);
+  for(const [k,v] of Object.entries(props)){
+    if(k==="class") n.className=v;
+    else if(k==="text") n.textContent=v;
+    else if(k.startsWith("on")) n.addEventListener(k.slice(2),v);
+    else n.setAttribute(k,v);
+  }
+  for(const c of kids){ if(c!=null) n.append(c); }
+  return n;
+}
+function feedback(ok, text){ return el("p",{class:"fb "+(ok?"ok":"no"),text:(ok?"✓ ":"✗ ")+text}); }
+
+let parts=[], graded=false, uid=0, confirmTimer=null, confirming=false;
+
+function partShell(num,title,hint,ptsLabel){
+  const body=el("div");
+  const sec=el("section",{class:"part",id:"parte-"+num},
+    el("div",{class:"part-head"},el("h2",{text:"Parte "+num+". "+title}),el("span",{class:"part-pts",text:ptsLabel})),
+    el("p",{class:"hint",text:hint}),
+    body);
+  return {sec,body};
+}
+
+function choicePart(num,title,hint,items,opts={}){
+  const {sec,body}=partShell(num,title,hint,items.length+" puntos");
+  if(opts.lead) body.append(el("p",{class:"tale",text:opts.lead}));
+  const state=items.map(it=>{
+    const box=el("div",{class:"item"},el("p",{class:"q"+(opts.plainQ?" q-plain":""),text:it.q}));
+    const group=el("div",{class:"choices"+(opts.layout?" "+opts.layout:"")});
+    const s={item:it,picked:null,btns:[],box};
+    it.options.forEach((o,i)=>{
+      const b=el("button",{type:"button",class:"choice","aria-pressed":"false",text:o.label,onclick:()=>{
+        if(graded) return;
+        s.picked=i;
+        s.btns.forEach((x,j)=>x.setAttribute("aria-pressed",j===i?"true":"false"));
+        refresh();
+      }});
+      s.btns.push(b); group.append(b);
+    });
+    box.append(group); body.append(box);
+    return s;
+  });
+  return {
+    sec,title,max:items.length,total:items.length,
+    answered:()=>state.filter(s=>s.picked!==null).length,
+    grade(){
+      let got=0;
+      state.forEach(s=>{
+        const okIndex=s.item.options.findIndex(o=>o.ok);
+        const hit=s.picked===okIndex;
+        if(hit) got++;
+        s.btns.forEach((b,i)=>{ b.disabled=true; if(i===okIndex) b.classList.add("right"); else if(i===s.picked) b.classList.add("wrong"); });
+        const correct=s.item.options[okIndex].label;
+        if(hit) s.box.append(feedback(true,"Correcto."));
+        else s.box.append(feedback(false,(s.picked===null?"Sin responder. ":"")+"Respuesta correcta: "+correct+(s.item.why?". "+s.item.why:"")));
+      });
+      return got;
+    }
+  };
+}
+
+function matchPart(num,title,hint,pairs){
+  const {sec,body}=partShell(num,title,hint,pairs.length+" puntos");
+  const left=pairs.map((p,i)=>({text:p.l,key:i,paired:null}));
+  const right=shuffle(pairs.map((p,i)=>({text:p.r,key:i,paired:null})));
+  let selected=null;
+  const colL=el("div",{class:"match-col"}), colR=el("div",{class:"match-col"});
+  function paint(){
+    [...left,...right].forEach(t=>{
+      t.btn.classList.toggle("sel",selected===t);
+      t.btn.classList.toggle("paired",t.paired!==null);
+      t.btn.querySelector(".badge")?.remove();
+    });
+    let n=0;
+    left.forEach(t=>{
+      if(t.paired){
+        const c=PAIR_COLORS[n%PAIR_COLORS.length]; n++;
+        const mk=()=>el("span",{class:"badge",style:"background:"+c,text:String(n)});
+        t.btn.prepend(mk()); t.paired.btn.prepend(mk());
+      }
+    });
+  }
+  function tap(t,side){
+    if(graded) return;
+    if(t.paired){ const o=t.paired; o.paired=null; t.paired=null; selected=null; paint(); refresh(); return; }
+    if(selected===t){ selected=null; paint(); return; }
+    if(selected && selected.side!==side){ selected.paired=t; t.paired=selected; selected=null; paint(); refresh(); return; }
+    selected=t; paint();
+  }
+  const add=(t,side,col)=>{ t.side=side; t.btn=el("button",{type:"button",class:"tile",text:t.text,onclick:()=>tap(t,side)}); col.append(t.btn); };
+  left.forEach(t=>add(t,"L",colL)); right.forEach(t=>add(t,"R",colR));
+  const box=el("div",{class:"item"},el("div",{class:"match"},colL,colR));
+  body.append(box);
+  return {
+    sec,title,max:pairs.length,total:pairs.length,
+    answered:()=>left.filter(t=>t.paired).length,
+    grade(){
+      let got=0; const miss=[];
+      left.forEach(t=>{
+        const hit=t.paired && t.paired.key===t.key;
+        if(hit){ got++; t.btn.classList.add("right"); t.paired.btn.classList.add("right"); }
+        else { t.btn.classList.add("wrong"); if(t.paired) t.paired.btn.classList.add("wrong"); miss.push(t); }
+      });
+      [...left,...right].forEach(t=>t.btn.disabled=true);
+      if(miss.length){
+        const ul=el("ul");
+        miss.forEach(t=>ul.append(el("li",{text:t.text+" → "+pairs[t.key].r})));
+        box.append(el("div",{class:"fb no"},el("b",{text:"✗ Así van las que faltaron:"}),ul));
+      } else box.append(feedback(true,"¡Todas unidas correctamente!"));
+      return got;
+    }
+  };
+}
+
+function blankPart(num,title,hint,items){
+  const {sec,body}=partShell(num,title,hint,items.length+" puntos");
+  const state=items.map(it=>{
+    const id="b"+(++uid);
+    const inp=el("input",{type:"text",id,autocomplete:"off",autocapitalize:"off",spellcheck:"false",placeholder:"Escribe la palabra",oninput:refresh});
+    const box=el("div",{class:"item blank"},el("label",{for:id,text:it.before+" ____"+it.after}),inp);
+    body.append(box);
+    return {it,inp,box};
+  });
+  return {
+    sec,title,max:items.length,total:items.length,
+    answered:()=>state.filter(s=>s.inp.value.trim()).length,
+    grade(){
+      let got=0;
+      state.forEach(s=>{
+        const r=checkBlank(s.inp.value,s.it.a);
+        s.inp.readOnly=true;
+        if(r.ok){
+          got++; s.inp.classList.add("right");
+          s.box.append(feedback(true,r.tip?"Correcto. Fíjate en la tilde: "+r.tip+".":"Correcto."));
+        } else {
+          s.inp.classList.add("wrong");
+          s.box.append(feedback(false,(s.inp.value.trim()?"":"Sin responder. ")+"Respuesta correcta: "+s.it.a[0]+"."));
+        }
+      });
+      return got;
+    }
+  };
+}
+
+function writtenPart(num,title,hint,items){
+  const {sec,body}=partShell(num,title,hint,items.length+" con revisión");
+  const state=items.map(it=>{
+    const box=el("div",{class:"item"});
+    if(it.q) box.append(el("p",{class:"q",text:it.q}));
+    const areas=(it.fields||[{label:"Mi respuesta",help:null}]).map(f=>{
+      const id="t"+(++uid);
+      const ta=el("textarea",{id,oninput:refresh});
+      box.append(el("div",{class:"field"},el("label",{for:id,text:f.label}),f.help?el("small",{text:f.help}):null,ta));
+      return ta;
+    });
+    body.append(box);
+    return {it,box,areas,mark:null};
+  });
+  return {
+    sec,title,max:items.length,total:items.length,written:true,
+    answered:()=>state.filter(s=>s.areas.every(a=>a.value.trim())).length,
+    got:()=>state.filter(s=>s.mark===true).length,
+    marked:()=>state.filter(s=>s.mark!==null).length,
+    grade(){
+      state.forEach(s=>{
+        s.areas.forEach(a=>a.readOnly=true);
+        const model=el("div",{class:"model"},el("h3",{text:s.it.modelTitle||"Compara con esta respuesta"}));
+        s.it.model.forEach(m=>model.append(Array.isArray(m)?listOf(m):el("p",{text:m})));
+        const yes=el("button",{type:"button",class:"mark",text:"✓ Bien"});
+        const no=el("button",{type:"button",class:"mark",text:"Repasar"});
+        const set=v=>{ s.mark=v; yes.classList.toggle("on-ok",v===true); no.classList.toggle("on-no",v===false); yes.setAttribute("aria-pressed",String(v===true)); no.setAttribute("aria-pressed",String(v===false)); renderResult(); };
+        yes.addEventListener("click",()=>set(true)); no.addEventListener("click",()=>set(false));
+        s.box.append(model,el("div",{class:"marks"},el("span",{class:"lab",text:"Con un adulto, marca cómo quedó:"}),yes,no));
+      });
+      return 0;
+    }
+  };
+}
+function listOf(a){ const ol=el("ol"); a.forEach(t=>ol.append(el("li",{text:t}))); return ol; }
+
+function buildQuiz(){
+  graded=false; parts=[]; confirming=false;
+  $("#result").replaceChildren();
+  $("#checkBtn").disabled=false;
+  $("#checkBtn").textContent="Revisar mi prueba";
+  setNewLabel();
+  const tn=2+Math.floor(Math.random()*3);
+  const vfPick=shuffle([...sample(BANK.vf.filter(x=>x.a),tn),...sample(BANK.vf.filter(x=>!x.a),6-tn)]);
+  parts.push(choicePart(1,"Verdadero o falso","Toca la opción correcta.",
+    vfPick.map(x=>({q:x.q,why:x.why,options:[{label:"Verdadero",ok:x.a},{label:"Falso",ok:!x.a}]})),{layout:"two"}));
+  parts.push(choicePart(2,"Elige la respuesta","Solo una opción es correcta.",
+    sample(BANK.om,6).map(x=>({q:x.q,options:shuffle([{label:x.ok,ok:true},...x.no.map(l=>({label:l,ok:false}))])}))));
+  parts.push(matchPart(3,"Une cada palabra","Toca una palabra y luego su significado. Si te equivocas, toca una pareja para soltarla.",sample(BANK.unir,5)));
+  parts.push(matchPart(4,"Une la situación con su enseñanza","Toca una situación y luego la enseñanza que le corresponde.",sample(BANK.moral,4)));
+  parts.push(blankPart(5,"Completa","Escribe la palabra que falta.",sample(BANK.completa,6)));
+  const f=sample(BANK.fabulas,1)[0];
+  const names=[["inicio","Inicio"],["nudo","Nudo"],["desenlace","Desenlace"],["moraleja","Moraleja"]];
+  parts.push(choicePart(6,"¿Qué parte de la fábula es?","Las partes están desordenadas. Indica cuál es cada una.",
+    shuffle(names).map(([k])=>({q:f[k],options:names.map(([kk,l])=>({label:l,ok:kk===k}))})),{lead:f.t,layout:"four",plainQ:true}));
+  const ens=shuffle([...BANK.ensenanzaFijas,...sample(BANK.ensenanzaExtra,1)]);
+  parts.push(writtenPart(7,"Escribe qué enseñanza nos deja","Lee cada situación y escribe su moraleja o enseñanza.",
+    ens.map(x=>({q:x.s,fields:[{label:"Moraleja o enseñanza"}],modelTitle:"Una respuesta posible",model:[x.m,"Tu respuesta puede decirlo con otras palabras."]}))));
+  parts.push(writtenPart(8,"Contesta","Escribe con tus propias palabras.",[
+    {q:"¿Qué es fábula?",model:["Narración escrita en prosa o verso. Generalmente los personajes son animales que hablan y actúan como seres humanos, y posee una moraleja."]},
+    {q:"Escribe las características de la fábula.",model:[["Es breve, cuenta una historia corta.","Sus personajes, generalmente animales, actúan como personas.","Moraleja: deja una enseñanza o consejo al lector.","Tiene un inicio, desarrollo y final."]]},
+    {q:"Escribe los elementos de la fábula.",model:[["Inicio, nudo, desenlace","Moraleja","Narrador","Personajes"]]}
+  ]));
+  parts.push(writtenPart(9,"Inventa tu fábula","Usa tus animales favoritos. Cada casilla es un elemento de tu fábula.",[
+    {fields:[
+      {label:"Título"},
+      {label:"Personajes",help:"¿Qué animales participan?"},
+      {label:"Narrador",help:"¿Quién cuenta la historia?"},
+      {label:"Inicio",help:"Presenta a los personajes y dónde están."},
+      {label:"Nudo",help:"¿Qué problema aparece?"},
+      {label:"Desenlace",help:"¿Cómo se resuelve el problema?"},
+      {label:"Moraleja",help:"¿Qué enseñanza deja tu historia?"}
+    ],modelTitle:"Revisa tu fábula",model:[["¿Es una historia corta?","¿Los animales hablan o actúan como personas?","¿Tiene inicio, nudo y desenlace?","¿La moraleja tiene relación con lo que pasó?"]]}
+  ]));
+  $("#quiz").replaceChildren(...parts.map(p=>p.sec));
+  refresh();
+}
+
+function refresh(){
+  if(graded){ return; }
+  const done=parts.reduce((n,p)=>n+p.answered(),0), total=parts.reduce((n,p)=>n+p.total,0);
+  $("#barMsg").replaceChildren(el("b",{text:done+" de "+total}),document.createTextNode(" respondidas"));
+  setNewLabel();
+}
+
+let pendingCheck=false;
+function check(){
+  if(graded){ $("#result").scrollIntoView({block:"start"}); return; }
+  const missing=parts.reduce((n,p)=>n+(p.total-p.answered()),0);
+  if(missing>0 && !pendingCheck){
+    pendingCheck=true;
+    $("#barMsg").replaceChildren(el("b",{text:"Te faltan "+missing}),document.createTextNode(". Toca otra vez para revisar así."));
+    $("#checkBtn").textContent="Revisar así";
+    setTimeout(()=>{ if(!graded){ pendingCheck=false; $("#checkBtn").textContent="Revisar mi prueba"; refresh(); } },5000);
+    return;
+  }
+  pendingCheck=false;
+  graded=true;
+  parts.forEach(p=>{ p.score=p.grade(); });
+  $("#checkBtn").textContent="Ver mi nota";
+  renderResult();
+  setNewLabel();
+  $("#result").scrollIntoView({block:"start"});
+}
+
+function renderResult(){
+  const auto=parts.filter(p=>!p.written), writ=parts.filter(p=>p.written);
+  const got=auto.reduce((n,p)=>n+p.score,0), max=auto.reduce((n,p)=>n+p.max,0);
+  const wMax=writ.reduce((n,p)=>n+p.max,0), wGot=writ.reduce((n,p)=>n+p.got(),0), wMarked=writ.reduce((n,p)=>n+p.marked(),0);
+  const pct=got/max;
+  const head=pct>=.9?"¡Excelente trabajo!":pct>=.7?"¡Vas muy bien!":"Repasa tus apuntes e inténtalo otra vez";
+  const list=el("ul",{class:"breakdown"});
+  auto.forEach(p=>{
+    const w=Math.round(p.score/p.max*100);
+    list.append(el("li",{},el("span",{text:p.title}),el("span",{text:p.score+"/"+p.max}),
+      el("div",{class:"meter"},el("i",{class:w<70?"low":"",style:"width:"+w+"%"}))));
+  });
+  const writtenLine=wMarked===wMax?"Respuestas escritas: "+wGot+" de "+wMax+" marcadas como bien."
+    :"Respuestas escritas: faltan "+(wMax-wMarked)+" por revisar con un adulto en las Partes 7, 8 y 9.";
+  const again=el("button",{type:"button",class:"btn primary",text:"Hacer una prueba nueva",onclick:()=>{buildQuiz();window.scrollTo(0,0);}});
+  $("#result").replaceChildren(el("div",{class:"result"},
+    el("h2",{text:head}),
+    el("div",{class:"score"},el("b",{text:got+"/"+max}),el("span",{text:"puntos en las Partes 1 a 6"})),
+    list,
+    el("p",{text:writtenLine}),
+    el("div",{},again)
+  ));
+  $("#barMsg").replaceChildren(el("b",{text:got+"/"+max}),document.createTextNode(" puntos"));
+}
+
+function hasWork(){ return !graded && parts.some(p=>p.answered()>0); }
+function setNewLabel(){ if(!confirming) $("#newBtn").textContent="Nueva prueba"; }
+$("#newBtn").addEventListener("click",()=>{
+  if(hasWork() && !confirming){
+    confirming=true;
+    $("#newBtn").textContent="Se borrarán tus respuestas. Toca otra vez";
+    clearTimeout(confirmTimer);
+    confirmTimer=setTimeout(()=>{confirming=false;setNewLabel();},4000);
+    return;
+  }
+  clearTimeout(confirmTimer);
+  confirming=false;
+  buildQuiz();
+  window.scrollTo(0,0);
+});
+$("#checkBtn").addEventListener("click",check);
+buildQuiz();
+</script>
+</body>
+</html>

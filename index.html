@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pruebas de Zurisadai</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+/* Idea: la misma pizarra de las pruebas; el menú es un horario de cuaderno agrupado por mes. */
+:root{
+  color-scheme:light;
+  --paper:#f5f7f2;
+  --board:#ffffff;
+  --marker:#1d3fa6;
+  --ink:#1f2a37;
+  --muted:#5b6675;
+  --line:#d6dce3;
+  --mango:#f4a81d;
+  --mango-soft:#fff1d2;
+  --display:"Patrick Hand","Comic Sans MS",cursive;
+  --body:"Andika","Trebuchet MS",Verdana,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 18px/1.5 var(--body)}
+.wrap{max-width:720px;margin:0 auto;padding:16px;display:grid;gap:24px}
+h1,h2,h3{font-family:var(--display);font-weight:400;color:var(--marker);margin:0;line-height:1.1;text-wrap:balance}
+:focus-visible{outline:3px solid var(--mango);outline-offset:2px}
+
+.board{background:var(--board);border:8px solid #b9c0c9;border-bottom-width:14px;border-radius:6px;padding:18px;display:grid;gap:6px}
+.board .hello{font-family:var(--display);font-size:24px;color:var(--marker)}
+.board h1{font-size:48px}
+.board p{margin:0;color:var(--muted)}
+
+.month{display:grid;gap:12px}
+.month-head{border-top:4px solid var(--marker);padding-top:10px;display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.month h2{font-size:34px}
+.month-head span{color:var(--muted);font-size:15px}
+
+.subject{display:grid;gap:8px}
+.subject h3{font-size:26px;color:var(--ink)}
+.test{display:grid;grid-template-columns:1fr auto;gap:4px 14px;align-items:center;background:var(--board);border:2px solid var(--line);border-left:8px solid var(--marker);border-radius:8px;padding:14px 16px;text-decoration:none;color:var(--ink);min-height:64px}
+.test:hover{border-color:var(--marker)}
+.test b{font-size:19px}
+.test small{color:var(--muted);font-size:15px;grid-column:1}
+.test .go{grid-row:1/3;grid-column:2;font-weight:700;color:var(--marker);white-space:nowrap}
+.soon{background:var(--mango-soft);border-left:6px solid var(--mango);padding:10px 14px;border-radius:0 8px 8px 0;margin:0;font-size:16px}
+footer{color:var(--muted);font-size:14px;text-align:center;padding-bottom:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="board">
+    <div class="hello">¡Hola, Zurisadai!</div>
+    <h1>Mis pruebas de Cuarto grado</h1>
+    <p>Elige una prueba para practicar. Cada vez que entres, las preguntas cambian.</p>
+  </header>
+
+  <main id="menu"></main>
+
+  <footer>Practica, aprende y prepárate para tus exámenes.</footer>
+</div>
+
+<script>
+// Para agregar una prueba nueva: añade una línea en "pruebas" de la materia.
+// Para un mes nuevo: copia un bloque completo y ponlo al inicio de la lista.
+const MESES = [
+  {
+    mes: "Noviembre 2026",
+    nota: "Cuarto grado",
+    materias: [
+      {
+        nombre: "Lengua y Literatura",
+        pruebas: [
+          {titulo: "La fábula", detalle: "Características, elementos, moraleja e invento de una fábula · 38 ejercicios", url: "lengua/fabulas.html"}
+        ]
+      }
+    ],
+    proximamente: "Las pruebas de las demás materias se agregarán aquí."
+  }
+];
+
+const menu = document.getElementById("menu");
+function el(tag, cls, text){ const n=document.createElement(tag); if(cls) n.className=cls; if(text!=null) n.textContent=text; return n; }
+MESES.forEach(m=>{
+  const sec=el("section","month");
+  const head=el("div","month-head");
+  head.append(el("h2",null,m.mes), el("span",null,m.nota));
+  sec.append(head);
+  m.materias.forEach(mat=>{
+    const box=el("div","subject");
+    box.append(el("h3",null,mat.nombre));
+    mat.pruebas.forEach(p=>{
+      const a=el("a","test"); a.href=p.url;
+      a.append(el("b",null,p.titulo), el("span","go","Practicar →"), el("small",null,p.detalle));
+      box.append(a);
+    });
+    sec.append(box);
+  });
+  if(m.proximamente) sec.append(el("p","soon",m.proximamente));
+  menu.append(sec);
+});
+</script>
+</body>
+</html>
