@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Servicios públicos y avances desde 2007</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+/* Idea: una pizarra de aula escrita con marcador azul; las partes son secciones de un cuaderno, no tarjetas. */
+:root{
+  color-scheme:light;
+  --paper:#f5f7f2;
+  --board:#ffffff;
+  --marker:#1d3fa6;
+  --ink:#1f2a37;
+  --muted:#5b6675;
+  --line:#d6dce3;
+  --mango:#f4a81d;
+  --mango-soft:#fff1d2;
+  --ok:#17794a;
+  --ok-soft:#dff3e7;
+  --bad:#b92c2c;
+  --bad-soft:#fbe3e1;
+  --display:"Patrick Hand","Comic Sans MS",cursive;
+  --body:"Andika","Trebuchet MS",Verdana,sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 18px/1.5 var(--body);padding-bottom:96px}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--mango);outline-offset:2px}
+.wrap{max-width:720px;margin:0 auto;padding:16px}
+h1,h2{font-family:var(--display);font-weight:400;color:var(--marker);text-wrap:balance;margin:0;line-height:1.1}
+
+.board{background:var(--board);border:8px solid #b9c0c9;border-bottom-width:14px;border-radius:6px;padding:16px 18px;display:grid;gap:8px}
+.board .subject{font-family:var(--display);font-size:22px;color:var(--marker)}
+.board h1{font-size:46px}
+.board p{margin:0;color:var(--muted)}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+
+.btn{border:2px solid var(--marker);background:var(--board);color:var(--marker);padding:9px 16px;border-radius:8px;font-weight:700;min-height:46px}
+.btn{text-decoration:none;display:inline-flex;align-items:center}
+.btn.primary{background:var(--marker);color:#fff}
+.btn:disabled{opacity:.5;cursor:default}
+
+details.notes{margin-top:14px;border-left:6px solid var(--mango);background:var(--mango-soft);padding:10px 14px;border-radius:0 8px 8px 0}
+details.notes summary{font-weight:700;cursor:pointer}
+details.notes h3{font-size:18px;margin:14px 0 4px}
+details.notes p,details.notes ol,details.notes ul{margin:4px 0}
+details.notes ol,details.notes ul{padding-left:24px}
+
+#result{margin-top:18px}
+.result{background:var(--board);border:3px solid var(--marker);border-radius:8px;padding:16px 18px;display:grid;gap:12px}
+.score{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.score b{font-family:var(--display);font-size:64px;line-height:1;color:var(--marker);font-weight:400;font-variant-numeric:tabular-nums}
+.score span{font-size:20px}
+.result h2{font-size:32px}
+.result p{margin:0}
+.breakdown{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.breakdown li{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-size:16px}
+.meter{grid-column:1/-1;height:9px;border-radius:5px;background:var(--line);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--ok)}
+.meter i.low{background:var(--mango)}
+
+section.part{margin-top:30px;border-top:4px solid var(--marker);padding-top:12px}
+.part-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.part h2{font-size:30px}
+.part-pts{color:var(--muted);font-size:15px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.hint{margin:4px 0 10px;color:var(--muted)}
+
+.item{padding:14px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}
+.q{margin:0 0 10px;font-weight:700}
+.q-plain{font-weight:400}
+.choices{display:grid;gap:8px}
+.choices.two{grid-template-columns:1fr 1fr}
+.choices.four{grid-template-columns:1fr 1fr}
+.choice{text-align:left;background:var(--board);border:2px solid var(--line);border-radius:8px;padding:10px 12px;min-height:48px}
+.choices.two .choice,.choices.four .choice{text-align:center}
+.choice[aria-pressed="true"]{border-color:var(--marker);background:#e6ecfb;font-weight:700}
+.choice.right{border-color:var(--ok);background:var(--ok-soft)}
+.choice.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.choice:disabled{cursor:default;color:var(--ink)}
+
+.fb{margin:10px 0 0;padding:8px 12px;border-radius:6px;font-size:16px}
+.fb.ok{background:var(--ok-soft);color:#0f5635}
+.fb.no{background:var(--bad-soft);color:#7f1d1d}
+
+.tale{font-family:var(--display);font-size:26px;color:var(--marker);margin:4px 0 0}
+
+.match{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.match-col{display:grid;gap:8px;align-content:start}
+.tile{position:relative;text-align:left;background:var(--board);border:2px solid var(--line);border-radius:8px;padding:10px 12px;min-height:58px;font-size:16px;overflow-wrap:anywhere}
+.tile.sel{border-color:var(--mango);background:var(--mango-soft)}
+.tile.paired{padding-left:38px}
+.badge{position:absolute;left:8px;top:9px;width:23px;height:23px;border-radius:50%;color:#fff;font-weight:700;font-size:14px;display:grid;place-items:center}
+.tile.right{border-color:var(--ok);background:var(--ok-soft)}
+.tile.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.tile:disabled{cursor:default;color:var(--ink)}
+
+.blank{display:grid;gap:6px}
+.blank label{font-weight:400}
+input[type=text],textarea{width:100%;background:var(--board);border:2px solid var(--line);border-radius:8px;padding:10px 12px;min-height:48px}
+input[type=text]:focus,textarea:focus{border-color:var(--marker);outline:none}
+textarea{min-height:92px;resize:vertical;line-height:1.4}
+input.right{border-color:var(--ok);background:var(--ok-soft)}
+input.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.field{display:grid;gap:4px;margin-top:10px}
+.field label{font-weight:700}
+.field small{color:var(--muted);font-size:15px}
+
+.model{margin-top:10px;background:var(--mango-soft);border-left:6px solid var(--mango);padding:10px 12px;border-radius:0 6px 6px 0}
+.model h3{margin:0 0 4px;font-size:16px}
+.model p,.model ul,.model ol{margin:4px 0}
+.model ul,.model ol{padding-left:22px}
+.marks{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center}
+.marks .lab{font-weight:700;font-size:16px;width:100%}
+.mark{border:2px solid var(--line);background:var(--board);border-radius:8px;padding:8px 16px;min-height:46px;font-weight:700}
+.mark.on-ok{border-color:var(--ok);background:var(--ok-soft);color:#0f5635}
+.mark.on-no{border-color:var(--mango);background:var(--mango-soft)}
+
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--board);border-top:3px solid var(--marker);z-index:5}
+.bar .in{max-width:720px;margin:0 auto;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.bar .msg{font-size:15px;line-height:1.25}
+.bar .btn{white-space:nowrap}
+.bar .msg b{font-size:18px;font-variant-numeric:tabular-nums}
+
+@media (max-width:400px){
+  .board h1{font-size:40px}
+  body{font-size:17px}
+  .tile{font-size:15px;padding:9px 9px}
+  .tile.paired{padding-left:34px}
+  .badge{left:6px}
+}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="board">
+    <div class="subject">Ciencias Sociales · Noviembre 2026</div>
+    <h1>Servicios públicos y avances desde 2007</h1>
+    <p>Cada prueba nueva cambia las preguntas y su orden.</p>
+    <div class="tools"><a class="btn" href="../index.html">← Menú</a><button id="newBtn" class="btn" type="button">Nueva prueba</button></div>
+  </header>
+
+  <details class="notes" id="notes">
+    <summary>Abrir mis apuntes para estudiar</summary>
+    <h3>El Gobierno de Reconciliación y Unidad Nacional (2007)</h3>
+    <p>Según tu libro, el 5 de noviembre de 2006 fueron electos como presidente y vicepresidente Daniel Ortega Saavedra y Jaime Morales Carazo. Asumieron sus cargos el 10 de enero de 2007.</p>
+    <h3>Logros que menciona tu libro</h3>
+    <ul>
+      <li><b>Salud:</b> campañas de abatización, limpieza, vacunación y fumigación; charlas de prevención y atención médica.</li>
+      <li><b>Ambiente:</b> campañas de reforestación con el Ministerio del Ambiente y los Recursos Naturales.</li>
+      <li><b>Usura Cero:</b> da créditos con bajos intereses a mujeres para abrir un negocio y mejorar la economía de su hogar.</li>
+      <li><b>¡Vivir Limpio, Vivir Sano, Vivir Bonito, Vivir Bien!:</b> cuidar y mantener limpios los parques, escuelas, centros de salud y calles, y ahorrar agua y energía.</li>
+    </ul>
+    <h3>Servicios públicos y su importancia</h3>
+    <ul>
+      <li><b>Educación:</b> ayuda a aprender y prepararse.</li>
+      <li><b>Salud:</b> permite atender enfermedades.</li>
+      <li><b>Caminos:</b> facilitan el traslado de personas y el transporte de productos.</li>
+      <li><b>Alimentación:</b> contribuye al crecimiento saludable.</li>
+      <li>Otros servicios públicos: agua potable, energía eléctrica, parques, recolección de basura.</li>
+    </ul>
+    <h3>Instituciones públicas</h3>
+    <p>Ministerio de Educación (escuelas), Ministerio de Salud (centros de salud y hospitales), Policía Nacional, Bomberos, Alcaldía y Ministerio del Ambiente.</p>
+    <h3>Actividades económicas</h3>
+    <p>Agricultura, ganadería, pesca, comercio y turismo. La agricultura contribuye a la economía nacional, el turismo genera beneficios económicos y las carreteras facilitan el transporte de productos.</p>
+    <h3>Responsabilidades</h3>
+    <ul>
+      <li>El gobierno tiene responsabilidades en la administración de los recursos públicos.</li>
+      <li>Los ciudadanos también tienen responsabilidades: cuidar los espacios públicos, mantener limpia la comunidad, estudiar, trabajar y colaborar con sus vecinos.</li>
+    </ul>
+  </details>
+
+  <div id="result" aria-live="polite"></div>
+  <main id="quiz"></main>
+</div>
+
+<div class="bar">
+  <div class="in">
+    <div class="msg" id="barMsg"></div>
+    <button id="checkBtn" class="btn primary" type="button">Revisar mi prueba</button>
+  </div>
+</div>
+
+<script>
+const BANK = {
+  vf: [
+    {q:"El gobierno tiene responsabilidades en la administración de los recursos públicos.", a:true},
+    {q:"Las escuelas y los hospitales son servicios importantes para la población.", a:true},
+    {q:"La agricultura contribuye a la economía nacional.", a:true},
+    {q:"Las carreteras facilitan el transporte de productos.", a:true},
+    {q:"La educación ayuda a aprender y prepararse.", a:true},
+    {q:"Un centro de salud permite atender enfermedades.", a:true},
+    {q:"Una buena alimentación contribuye al crecimiento saludable.", a:true},
+    {q:"El programa Usura Cero da créditos con bajos intereses a mujeres para abrir un negocio.", a:true},
+    {q:"Los ciudadanos no tienen responsabilidades en su comunidad.", a:false, why:"Los ciudadanos sí tienen responsabilidades: cuidar, limpiar y colaborar en su comunidad."},
+    {q:"El turismo no genera beneficios económicos.", a:false, why:"El turismo sí genera beneficios económicos."},
+    {q:"Los caminos no sirven para trasladar personas.", a:false, why:"Los caminos facilitan el traslado de personas."},
+    {q:"Las campañas de vacunación no ayudan a la salud.", a:false, why:"Las vacunas ayudan a prevenir enfermedades."},
+    {q:"Cuidar los parques y las escuelas es solo trabajo del gobierno.", a:false, why:"Todos debemos cuidar los espacios de la comunidad."}
+  ],
+  om: [
+    {q:"¿En qué año asumió sus cargos el Gobierno de Reconciliación y Unidad Nacional?", ok:"2007", no:["1979","1990","2016"]},
+    {q:"¿Cuál de estos es un servicio público?", ok:"Un hospital", no:["Una tienda de juguetes","Un celular","Una bicicleta"]},
+    {q:"¿Para qué sirve una escuela?", ok:"Para aprender y prepararse", no:["Para curar enfermedades","Para vender productos","Para trasladar personas"]},
+    {q:"¿Qué institución se encarga de los centros de salud?", ok:"El Ministerio de Salud", no:["Los Bomberos","El Ministerio de Educación","La Policía Nacional"]},
+    {q:"¿Qué institución se encarga de las escuelas?", ok:"El Ministerio de Educación", no:["El Ministerio de Salud","Los Bomberos","El Ministerio del Ambiente"]},
+    {q:"¿Cuál de estas es una actividad económica?", ok:"La agricultura", no:["Dormir","Jugar en el parque","Ver televisión"]},
+    {q:"¿Qué facilitan las carreteras?", ok:"El transporte de productos y personas", no:["Atender enfermedades","Aprender a leer","Ahorrar energía"]},
+    {q:"¿Cómo puede un ciudadano ayudar a su comunidad?", ok:"Manteniendo limpias las calles y los parques", no:["Tirando basura en la calle","Rompiendo los juegos del parque","Desperdiciando el agua"]},
+    {q:"¿Qué hace el programa Usura Cero, según tu libro?", ok:"Da créditos con bajos intereses a mujeres para abrir un negocio", no:["Construye carreteras","Vacuna a los niños","Siembra árboles"]},
+    {q:"¿Para qué sirven las campañas de fumigación y abatización?", ok:"Para cuidar la salud y evitar enfermedades", no:["Para construir escuelas","Para sembrar maíz","Para hacer turismo"]},
+    {q:"¿Qué es una campaña de reforestación?", ok:"Sembrar árboles para cuidar el ambiente", no:["Vacunar a las personas","Construir un hospital","Vender productos en el mercado"]},
+    {q:"¿Qué servicio contribuye al crecimiento saludable?", ok:"La alimentación", no:["Los caminos","El turismo","El comercio"]}
+  ],
+  servicios: [
+    {l:"Educación", r:"Ayuda a aprender y prepararse"},
+    {l:"Salud", r:"Permite atender enfermedades"},
+    {l:"Caminos", r:"Facilita el traslado de personas"},
+    {l:"Alimentación", r:"Contribuye al crecimiento saludable"}
+  ],
+  situaciones: [
+    {l:"Una escuela recibe materiales.", r:"Los niños pueden estudiar mejor."},
+    {l:"Una comunidad cuenta con un centro de salud.", r:"Las personas reciben atención médica cerca."},
+    {l:"Se construye un camino.", r:"Es más fácil transportar personas y productos."},
+    {l:"Una familia recibe apoyo alimenticio.", r:"Los niños crecen sanos."},
+    {l:"Una comunidad recibe energía eléctrica.", r:"Las familias tienen luz para estudiar y trabajar."},
+    {l:"Una mujer recibe un crédito de Usura Cero.", r:"Puede abrir un negocio para su hogar."}
+  ],
+  clasifica: [
+    {q:"Escuela", a:"s"}, {q:"Hospital", a:"s"}, {q:"Agua potable", a:"s"}, {q:"Parque", a:"s"}, {q:"Energía eléctrica", a:"s"},
+    {q:"Agricultura", a:"e"}, {q:"Turismo", a:"e"}, {q:"Ganadería", a:"e"}, {q:"Pesca", a:"e"}, {q:"Comercio", a:"e"}
+  ],
+  completa: [
+    {before:"El Gobierno de Reconciliación y Unidad Nacional asumió sus cargos en el año", after:".", a:["2007"]},
+    {before:"Las campañas de vacunación ayudan a cuidar la", after:".", a:["salud"]},
+    {before:"Las", after:"facilitan el transporte de productos.", a:["carreteras","carretera","caminos"]},
+    {before:"La", after:"contribuye a la economía nacional.", a:["agricultura"]},
+    {before:"En las campañas de reforestación se siembran", after:".", a:["árboles","arboles"]},
+    {before:"Vivir Limpio, Vivir Sano, Vivir Bonito, Vivir", after:".", a:["bien"]},
+    {before:"La educación ayuda a aprender y", after:".", a:["prepararse"]},
+    {before:"El programa Usura Cero da", after:"con bajos intereses.", a:["créditos","credito","crédito","creditos"]}
+  ],
+  contesta: [
+    {q:"¿Por qué es importante construir escuelas y hospitales?", model:["Porque en las escuelas los niños aprenden y se preparan, y en los hospitales se atienden las enfermedades de la población."]},
+    {q:"¿Cómo contribuyen los ciudadanos al desarrollo de su comunidad?", model:["Cuidando los parques, escuelas y calles, manteniendo limpia la comunidad, estudiando, trabajando y colaborando con sus vecinos."]},
+    {q:"¿Qué importancia tiene la educación para el desarrollo de Nicaragua?", model:["La educación ayuda a las personas a aprender y prepararse para trabajar y mejorar su vida, su familia y su país."]},
+    {q:"Menciona 3 servicios públicos que benefician a la población.", model:["Ejemplos: educación, salud, agua potable, energía eléctrica, caminos y carreteras, parques."]},
+    {q:"Menciona 4 instituciones públicas que conozcas.", model:["Ejemplos: Ministerio de Educación, Ministerio de Salud, Policía Nacional, Bomberos, Alcaldía, Ministerio del Ambiente."]},
+    {q:"Menciona 2 actividades económicas importantes para las familias nicaragüenses.", model:["Ejemplos: agricultura, ganadería, pesca, comercio, turismo."]},
+    {q:"Escribe 2 cambios o iniciativas sociales impulsados durante el periodo.", model:["Ejemplos de tu libro: campañas de vacunación y fumigación, atención médica, reforestación, el programa Usura Cero, el programa Vivir Limpio, Vivir Sano, Vivir Bonito, Vivir Bien."]},
+    {q:"¿Qué importancia tuvo el regreso del Gobierno Sandinista en Nicaragua?", model:["Según tu libro, el gobierno que asumió el 10 de enero de 2007 impulsó programas en salud, ambiente y apoyo a las familias, como las campañas de vacunación, la reforestación y Usura Cero."]},
+    {q:"¿Por qué es importante que los gobiernos promuevan el bienestar de las familias?", model:["Porque las familias necesitan educación, salud, alimentación y servicios para vivir bien y salir adelante."]},
+    {q:"¿Cuál de los avances estudiados consideras el más importante? ¿Por qué?", modelTitle:"Revisa tu respuesta", model:["Puedes elegir cualquiera: escuelas, centros de salud, apoyo a familias campesinas o energía eléctrica. Lo importante es que expliques por qué ayuda a las familias."]}
+  ],
+  caso: {
+    texto:"En una comunidad de Nicaragua, las familias necesitan una escuela con mejores condiciones, atención médica y espacios seguros para que los niños puedan jugar. Los habitantes se reúnen para comunicar sus necesidades a las autoridades correspondientes.",
+    fields:[
+      {label:"1. ¿Cuáles son las necesidades de esta comunidad?"},
+      {label:"2. ¿Qué instituciones podrían ayudar a resolverlas?"},
+      {label:"3. ¿Por qué es importante escuchar a las familias?"},
+      {label:"4. ¿Cómo pueden colaborar los habitantes para mejorar su comunidad?"}
+    ],
+    model:[["Una escuela con mejores condiciones, atención médica y espacios seguros para jugar.","Ministerio de Educación, Ministerio de Salud y la Alcaldía.","Porque ellas conocen lo que necesita su comunidad.","Reuniéndose, limpiando, cuidando los espacios y trabajando juntos."]]
+  }
+};
+
+const PAIR_COLORS = ["#1d3fa6","#a0460e","#6b2fa0","#00707a","#a3235c","#4c6a12","#555f6e"];
+const $ = s => document.querySelector(s);
+const shuffle = list => { const a=[...list]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; };
+const sample = (list,n) => shuffle(list).slice(0,n);
+const stripAccents = s => s.normalize("NFD").replace(/[̀-ͯ]/g,"");
+const clean = s => s.trim().toLowerCase().replace(/[.,;:!?]+$/,"").replace(/\s+/g," ");
+function checkBlank(value, accepted){
+  const v = clean(value);
+  for(const a of accepted){ if(v===clean(a)) return {ok:true,tip:null}; }
+  for(const a of accepted){ if(v && stripAccents(v)===stripAccents(clean(a))) return {ok:true,tip:a}; }
+  return {ok:false,tip:null};
+}
+function el(tag, props={}, ...kids){
+  const n=document.createElement(tag);
+  for(const [k,v] of Object.entries(props)){
+    if(k==="class") n.className=v;
+    else if(k==="text") n.textContent=v;
+    else if(k.startsWith("on")) n.addEventListener(k.slice(2),v);
+    else n.setAttribute(k,v);
+  }
+  for(const c of kids){ if(c!=null) n.append(c); }
+  return n;
+}
+function feedback(ok, text){ return el("p",{class:"fb "+(ok?"ok":"no"),text:(ok?"✓ ":"✗ ")+text}); }
+
+let parts=[], graded=false, uid=0, confirmTimer=null, confirming=false;
+
+function partShell(num,title,hint,ptsLabel){
+  const body=el("div");
+  const sec=el("section",{class:"part",id:"parte-"+num},
+    el("div",{class:"part-head"},el("h2",{text:"Parte "+num+". "+title}),el("span",{class:"part-pts",text:ptsLabel})),
+    el("p",{class:"hint",text:hint}),
+    body);
+  return {sec,body};
+}
+
+function choicePart(num,title,hint,items,opts={}){
+  const {sec,body}=partShell(num,title,hint,items.length+" puntos");
+  if(opts.lead) body.append(el("p",{class:"tale",text:opts.lead}));
+  const state=items.map(it=>{
+    const box=el("div",{class:"item"},el("p",{class:"q"+(opts.plainQ?" q-plain":""),text:it.q}));
+    const group=el("div",{class:"choices"+(opts.layout?" "+opts.layout:"")});
+    const s={item:it,picked:null,btns:[],box};
+    it.options.forEach((o,i)=>{
+      const b=el("button",{type:"button",class:"choice","aria-pressed":"false",text:o.label,onclick:()=>{
+        if(graded) return;
+        s.picked=i;
+        s.btns.forEach((x,j)=>x.setAttribute("aria-pressed",j===i?"true":"false"));
+        refresh();
+      }});
+      s.btns.push(b); group.append(b);
+    });
+    box.append(group); body.append(box);
+    return s;
+  });
+  return {
+    sec,title,max:items.length,total:items.length,
+    answered:()=>state.filter(s=>s.picked!==null).length,
+    grade(){
+      let got=0;
+      state.forEach(s=>{
+        const okIndex=s.item.options.findIndex(o=>o.ok);
+        const hit=s.picked===okIndex;
+        if(hit) got++;
+        s.btns.forEach((b,i)=>{ b.disabled=true; if(i===okIndex) b.classList.add("right"); else if(i===s.picked) b.classList.add("wrong"); });
+        const correct=s.item.options[okIndex].label;
+        if(hit) s.box.append(feedback(true,"Correcto."));
+        else s.box.append(feedback(false,(s.picked===null?"Sin responder. ":"")+"Respuesta correcta: "+correct+(s.item.why?". "+s.item.why:"")));
+      });
+      return got;
+    }
+  };
+}
+
+function matchPart(num,title,hint,pairs){
+  const {sec,body}=partShell(num,title,hint,pairs.length+" puntos");
+  const left=pairs.map((p,i)=>({text:p.l,key:i,paired:null}));
+  const right=shuffle(pairs.map((p,i)=>({text:p.r,key:i,paired:null})));
+  let selected=null;
+  const colL=el("div",{class:"match-col"}), colR=el("div",{class:"match-col"});
+  function paint(){
+    [...left,...right].forEach(t=>{
+      t.btn.classList.toggle("sel",selected===t);
+      t.btn.classList.toggle("paired",t.paired!==null);
+      t.btn.querySelector(".badge")?.remove();
+    });
+    let n=0;
+    left.forEach(t=>{
+      if(t.paired){
+        const c=PAIR_COLORS[n%PAIR_COLORS.length]; n++;
+        const mk=()=>el("span",{class:"badge",style:"background:"+c,text:String(n)});
+        t.btn.prepend(mk()); t.paired.btn.prepend(mk());
+      }
+    });
+  }
+  function tap(t,side){
+    if(graded) return;
+    if(t.paired){ const o=t.paired; o.paired=null; t.paired=null; selected=null; paint(); refresh(); return; }
+    if(selected===t){ selected=null; paint(); return; }
+    if(selected && selected.side!==side){ selected.paired=t; t.paired=selected; selected=null; paint(); refresh(); return; }
+    selected=t; paint();
+  }
+  const add=(t,side,col)=>{ t.side=side; t.btn=el("button",{type:"button",class:"tile",text:t.text,onclick:()=>tap(t,side)}); col.append(t.btn); };
+  left.forEach(t=>add(t,"L",colL)); right.forEach(t=>add(t,"R",colR));
+  const box=el("div",{class:"item"},el("div",{class:"match"},colL,colR));
+  body.append(box);
+  return {
+    sec,title,max:pairs.length,total:pairs.length,
+    answered:()=>left.filter(t=>t.paired).length,
+    grade(){
+      let got=0; const miss=[];
+      left.forEach(t=>{
+        const hit=t.paired && t.paired.key===t.key;
+        if(hit){ got++; t.btn.classList.add("right"); t.paired.btn.classList.add("right"); }
+        else { t.btn.classList.add("wrong"); if(t.paired) t.paired.btn.classList.add("wrong"); miss.push(t); }
+      });
+      [...left,...right].forEach(t=>t.btn.disabled=true);
+      if(miss.length){
+        const ul=el("ul");
+        miss.forEach(t=>ul.append(el("li",{text:t.text+" → "+pairs[t.key].r})));
+        box.append(el("div",{class:"fb no"},el("b",{text:"✗ Así van las que faltaron:"}),ul));
+      } else box.append(feedback(true,"¡Todas unidas correctamente!"));
+      return got;
+    }
+  };
+}
+
+function blankPart(num,title,hint,items){
+  const {sec,body}=partShell(num,title,hint,items.length+" puntos");
+  const state=items.map(it=>{
+    const id="b"+(++uid);
+    const inp=el("input",{type:"text",id,autocomplete:"off",autocapitalize:"off",spellcheck:"false",placeholder:"Escribe la palabra",oninput:refresh});
+    const box=el("div",{class:"item blank"},el("label",{for:id,text:it.before+" ____"+it.after}),inp);
+    body.append(box);
+    return {it,inp,box};
+  });
+  return {
+    sec,title,max:items.length,total:items.length,
+    answered:()=>state.filter(s=>s.inp.value.trim()).length,
+    grade(){
+      let got=0;
+      state.forEach(s=>{
+        const r=checkBlank(s.inp.value,s.it.a);
+        s.inp.readOnly=true;
+        if(r.ok){
+          got++; s.inp.classList.add("right");
+          s.box.append(feedback(true,r.tip?"Correcto. Fíjate en la tilde: "+r.tip+".":"Correcto."));
+        } else {
+          s.inp.classList.add("wrong");
+          s.box.append(feedback(false,(s.inp.value.trim()?"":"Sin responder. ")+"Respuesta correcta: "+s.it.a[0]+"."));
+        }
+      });
+      return got;
+    }
+  };
+}
+
+function writtenPart(num,title,hint,items){
+  const {sec,body}=partShell(num,title,hint,items.length+" con revisión");
+  const state=items.map(it=>{
+    const box=el("div",{class:"item"});
+    if(it.q) box.append(el("p",{class:"q",text:it.q}));
+    const areas=(it.fields||[{label:"Mi respuesta",help:null}]).map(f=>{
+      const id="t"+(++uid);
+      const ta=el("textarea",{id,oninput:refresh});
+      box.append(el("div",{class:"field"},el("label",{for:id,text:f.label}),f.help?el("small",{text:f.help}):null,ta));
+      return ta;
+    });
+    body.append(box);
+    return {it,box,areas,mark:null};
+  });
+  return {
+    sec,title,max:items.length,total:items.length,written:true,
+    answered:()=>state.filter(s=>s.areas.every(a=>a.value.trim())).length,
+    got:()=>state.filter(s=>s.mark===true).length,
+    marked:()=>state.filter(s=>s.mark!==null).length,
+    grade(){
+      state.forEach(s=>{
+        s.areas.forEach(a=>a.readOnly=true);
+        const model=el("div",{class:"model"},el("h3",{text:s.it.modelTitle||"Compara con esta respuesta"}));
+        s.it.model.forEach(m=>model.append(Array.isArray(m)?listOf(m):el("p",{text:m})));
+        const yes=el("button",{type:"button",class:"mark",text:"✓ Bien"});
+        const no=el("button",{type:"button",class:"mark",text:"Repasar"});
+        const set=v=>{ s.mark=v; yes.classList.toggle("on-ok",v===true); no.classList.toggle("on-no",v===false); yes.setAttribute("aria-pressed",String(v===true)); no.setAttribute("aria-pressed",String(v===false)); renderResult(); };
+        yes.addEventListener("click",()=>set(true)); no.addEventListener("click",()=>set(false));
+        s.box.append(model,el("div",{class:"marks"},el("span",{class:"lab",text:"Con un adulto, marca cómo quedó:"}),yes,no));
+      });
+      return 0;
+    }
+  };
+}
+function listOf(a){ const ol=el("ol"); a.forEach(t=>ol.append(el("li",{text:t}))); return ol; }
+
+function buildQuiz(){
+  graded=false; parts=[]; confirming=false;
+  $("#result").replaceChildren();
+  $("#checkBtn").disabled=false;
+  $("#checkBtn").textContent="Revisar mi prueba";
+  setNewLabel();
+  const tn=3+Math.floor(Math.random()*2);
+  const vfPick=shuffle([...sample(BANK.vf.filter(x=>x.a),tn),...sample(BANK.vf.filter(x=>!x.a),6-tn)]);
+  parts.push(choicePart(1,"Verdadero o falso","Toca la opción correcta.",
+    vfPick.map(x=>({q:x.q,why:x.why,options:[{label:"Verdadero",ok:x.a},{label:"Falso",ok:!x.a}]})),{layout:"two"}));
+  parts.push(choicePart(2,"Elige la respuesta","Solo una opción es correcta.",
+    sample(BANK.om,6).map(x=>({q:x.q,options:shuffle([{label:x.ok,ok:true},...x.no.map(l=>({label:l,ok:false}))])}))));
+  parts.push(matchPart(3,"Une cada servicio con su importancia","Toca un servicio y luego su importancia. Toca una pareja para soltarla.",BANK.servicios));
+  parts.push(matchPart(4,"Une cada situación con su beneficio","Toca una situación y luego el beneficio que representa para la población.",sample(BANK.situaciones,4)));
+  parts.push(choicePart(5,"¿Servicio público o actividad económica?","Clasifica cada palabra.",
+    shuffle([...sample(BANK.clasifica.filter(x=>x.a==="s"),3),...sample(BANK.clasifica.filter(x=>x.a==="e"),3)])
+      .map(x=>({q:x.q,options:[{label:"Servicio público",ok:x.a==="s"},{label:"Actividad económica",ok:x.a==="e"}]})),{layout:"two"}));
+  parts.push(blankPart(6,"Completa","Escribe la palabra que falta.",sample(BANK.completa,5)));
+  const items=sample(BANK.contesta,3).map(x=>({q:x.q,model:x.model,modelTitle:x.modelTitle||"Una respuesta posible"}));
+  items.push({q:BANK.caso.texto,fields:BANK.caso.fields,modelTitle:"Respuestas posibles",model:BANK.caso.model});
+  parts.push(writtenPart(7,"Contesta","Escribe con tus propias palabras. Al final hay un caso para leer.",items));
+  $("#quiz").replaceChildren(...parts.map(p=>p.sec));
+  refresh();
+}
+
+function refresh(){
+  if(graded){ return; }
+  const done=parts.reduce((n,p)=>n+p.answered(),0), total=parts.reduce((n,p)=>n+p.total,0);
+  $("#barMsg").replaceChildren(el("b",{text:done+" de "+total}),document.createTextNode(" respondidas"));
+  setNewLabel();
+}
+
+let pendingCheck=false;
+function check(){
+  if(graded){ $("#result").scrollIntoView({block:"start"}); return; }
+  const missing=parts.reduce((n,p)=>n+(p.total-p.answered()),0);
+  if(missing>0 && !pendingCheck){
+    pendingCheck=true;
+    $("#barMsg").replaceChildren(el("b",{text:"Te faltan "+missing}),document.createTextNode(". Toca otra vez para revisar así."));
+    $("#checkBtn").textContent="Revisar así";
+    setTimeout(()=>{ if(!graded){ pendingCheck=false; $("#checkBtn").textContent="Revisar mi prueba"; refresh(); } },5000);
+    return;
+  }
+  pendingCheck=false;
+  graded=true;
+  parts.forEach(p=>{ p.score=p.grade(); });
+  $("#checkBtn").textContent="Ver mi nota";
+  renderResult();
+  setNewLabel();
+  $("#result").scrollIntoView({block:"start"});
+}
+
+function renderResult(){
+  const auto=parts.filter(p=>!p.written), writ=parts.filter(p=>p.written);
+  const got=auto.reduce((n,p)=>n+p.score,0), max=auto.reduce((n,p)=>n+p.max,0);
+  const wMax=writ.reduce((n,p)=>n+p.max,0), wGot=writ.reduce((n,p)=>n+p.got(),0), wMarked=writ.reduce((n,p)=>n+p.marked(),0);
+  const pct=got/max;
+  const head=pct>=.9?"¡Excelente trabajo!":pct>=.7?"¡Vas muy bien!":"Repasa tus apuntes e inténtalo otra vez";
+  const list=el("ul",{class:"breakdown"});
+  auto.forEach(p=>{
+    const w=Math.round(p.score/p.max*100);
+    list.append(el("li",{},el("span",{text:p.title}),el("span",{text:p.score+"/"+p.max}),
+      el("div",{class:"meter"},el("i",{class:w<70?"low":"",style:"width:"+w+"%"}))));
+  });
+  const writtenLine=wMarked===wMax?"Respuestas escritas: "+wGot+" de "+wMax+" marcadas como bien."
+    :"Respuestas escritas: faltan "+(wMax-wMarked)+" por revisar con un adulto en la Parte 7.";
+  const again=el("button",{type:"button",class:"btn primary",text:"Hacer una prueba nueva",onclick:()=>{buildQuiz();window.scrollTo(0,0);}});
+  $("#result").replaceChildren(el("div",{class:"result"},
+    el("h2",{text:head}),
+    el("div",{class:"score"},el("b",{text:got+"/"+max}),el("span",{text:"puntos en las Partes 1 a 6"})),
+    list,
+    el("p",{text:writtenLine}),
+    el("div",{},again)
+  ));
+  $("#barMsg").replaceChildren(el("b",{text:got+"/"+max}),document.createTextNode(" puntos"));
+}
+
+function hasWork(){ return !graded && parts.some(p=>p.answered()>0); }
+function setNewLabel(){ if(!confirming) $("#newBtn").textContent="Nueva prueba"; }
+$("#newBtn").addEventListener("click",()=>{
+  if(hasWork() && !confirming){
+    confirming=true;
+    $("#newBtn").textContent="Se borrarán tus respuestas. Toca otra vez";
+    clearTimeout(confirmTimer);
+    confirmTimer=setTimeout(()=>{confirming=false;setNewLabel();},4000);
+    return;
+  }
+  clearTimeout(confirmTimer);
+  confirming=false;
+  buildQuiz();
+  window.scrollTo(0,0);
+});
+$("#checkBtn").addEventListener("click",check);
+buildQuiz();
+</script>
+</body>
+</html>
